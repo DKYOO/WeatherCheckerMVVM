@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITextFieldDelegate {
+class ViewController: UIViewController, UITextFieldDelegate, WeatherManagerDelegate {
     
     // MARK: Hi there, here is the UI Elements
     
@@ -85,9 +85,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     let cityNameLabel: UILabel = {
        let label = UILabel()
-        label.font = .systemFont(ofSize: 30, weight: .light)
+        label.font = .systemFont(ofSize: 30, weight: .semibold)
         label.textColor = .white
-        label.textAlignment = .center
+        label.textAlignment = .right
         label.text = "London"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -108,6 +108,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.imageTapped))
         searchImage.addGestureRecognizer(tap)
         self.view.addSubviews([backgroundView, searchTextField, locationImage, searchImage, weatherTypeImage, temratureCountLabel, temratureTypeLabel, cityNameLabel])
+        weatherManager.delegate = self
         searchTextField.delegate = self
         buildConstraints()
     }
@@ -178,7 +179,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
             temratureCountLabel.topAnchor.constraint(equalTo: weatherTypeImage.bottomAnchor, constant: 10),
             temratureCountLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -30),
             temratureCountLabel.heightAnchor.constraint(equalToConstant: 80),
-            temratureCountLabel.widthAnchor.constraint(equalToConstant: 80),
+            temratureCountLabel.widthAnchor.constraint(equalToConstant: 150),
             
             temratureTypeLabel.topAnchor.constraint(equalTo: weatherTypeImage.bottomAnchor, constant: 10),
             temratureTypeLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
@@ -189,12 +190,27 @@ class ViewController: UIViewController, UITextFieldDelegate {
             cityNameLabel.topAnchor.constraint(equalTo: temratureCountLabel.bottomAnchor, constant: 10),
             cityNameLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
             cityNameLabel.heightAnchor.constraint(equalToConstant: 30),
-            cityNameLabel.widthAnchor.constraint(equalToConstant: 100),
+            cityNameLabel.widthAnchor.constraint(equalToConstant: 150),
 
         ])
     }
     
     
+}
+
+extension ViewController {
+    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
+        
+        DispatchQueue.main.async {
+            self.temratureCountLabel.text = weather.tempratureString
+            self.weatherTypeImage.image = UIImage(systemName: weather.conditionName)
+            self.cityNameLabel.text = weather.cityName
+        }
+        
+    }
+    func didFailWithError(error: Error) {
+        print (error)
+    }
 }
 
 
