@@ -6,8 +6,9 @@
 //
 
 import UIKit
+import CoreLocation
 
-class ViewController: UIViewController, UITextFieldDelegate, WeatherManagerDelegate {
+class ViewController: UIViewController {
     
     // MARK: Hi there, here is the UI Elements
     
@@ -102,52 +103,28 @@ class ViewController: UIViewController, UITextFieldDelegate, WeatherManagerDeleg
     }()
     
     var weatherManager = WeatherManager()
+    let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //Add gesture Recognizer to the UIImage
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.imageTapped))
         searchImage.addGestureRecognizer(tap)
+        
+        //Create Subviews
         self.view.addSubviews([backgroundView, searchTextField, locationImage, searchImage, weatherTypeImage, temratureCountLabel, temratureTypeLabel, cityNameLabel])
+        
+        //Ask permission to use User's Geoposition or Current location
+        locationManager.requestWhenInUseAuthorization()
+        
+        //
         weatherManager.delegate = self
         searchTextField.delegate = self
         buildConstraints()
     }
     
-    @objc func imageTapped(sender: UITapGestureRecognizer) {
-        searchTextField.endEditing(true)
-        guard let text = searchTextField.text else {
-            return
-        }
-        print(text)
-    }
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        searchTextField.endEditing(true)
-        guard let text = searchTextField.text else {
-            return false
-        }
-        print (text)
-        return true
-    }
-    
-    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        //TODO: Use Guard 😎
-        if textField.text != "" {
-            return true
-        } else {
-            textField.placeholder = "Type something"
-            return false
-        }
-    }
-    
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        //TODO: Use searchTextField.text to get the weather from server
-        
-        if let city = searchTextField.text {
-            weatherManager.fetchWeather(cityName: city)
-        }
-        searchTextField.text = ""
-    }
+
     
     private func buildConstraints() {
         NSLayoutConstraint.activate([
@@ -194,11 +171,53 @@ class ViewController: UIViewController, UITextFieldDelegate, WeatherManagerDeleg
 
         ])
     }
-    
-    
+ 
 }
 
-extension ViewController {
+//MARK: - Keyboard tricks
+
+extension ViewController: UITextFieldDelegate {
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        searchTextField.endEditing(true)
+        guard let text = searchTextField.text else {
+            return false
+        }
+        print (text)
+        return true
+    }
+    
+    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        //TODO: Use Guard 😎
+        if textField.text != "" {
+            return true
+        } else {
+            textField.placeholder = "Type something"
+            return false
+        }
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        //TODO: Use searchTextField.text to get the weather from server
+        
+        if let city = searchTextField.text {
+            weatherManager.fetchWeather(cityName: city)
+        }
+        searchTextField.text = ""
+    }
+    
+    //MARK: Button functionality
+    @objc func imageTapped(sender: UITapGestureRecognizer) {
+        searchTextField.endEditing(true)
+        guard let text = searchTextField.text else {
+            return
+        }
+        print(text)
+    }
+}
+
+extension ViewController: WeatherManagerDelegate {
+    
     func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
         
         DispatchQueue.main.async {
@@ -211,6 +230,7 @@ extension ViewController {
     func didFailWithError(error: Error) {
         print (error)
     }
+    
 }
 
 
