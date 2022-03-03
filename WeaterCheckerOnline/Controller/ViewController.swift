@@ -40,6 +40,7 @@ class ViewController: UIViewController {
         imageView.image = UIImage(systemName: "location.circle.fill")
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = .systemGray
+        imageView.isUserInteractionEnabled = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
@@ -111,16 +112,19 @@ class ViewController: UIViewController {
         //Add gesture Recognizer to the UIImage
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.imageTapped))
         searchImage.addGestureRecognizer(tap)
-        
+        let tapLocation = UITapGestureRecognizer(target: self, action: #selector(self.locationImageTapped))
+        locationImage.addGestureRecognizer(tapLocation)
         //Create Subviews
         self.view.addSubviews([backgroundView, searchTextField, locationImage, searchImage, weatherTypeImage, temratureCountLabel, temratureTypeLabel, cityNameLabel])
         
         //Ask permission to use User's Geoposition or Current location
+        locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
-        
-        //
+        locationManager.requestLocation()
+        //Delegate
         weatherManager.delegate = self
         searchTextField.delegate = self
+        //Build constraints
         buildConstraints()
     }
     
@@ -214,6 +218,11 @@ extension ViewController: UITextFieldDelegate {
         }
         print(text)
     }
+    // Maybe I can Overload previous Method !?
+    @objc func locationImageTapped(sender: UITapGestureRecognizer) {
+        print ("Hello EPTA")
+        locationManager.requestLocation()
+    }
 }
 
 extension ViewController: WeatherManagerDelegate {
@@ -228,6 +237,29 @@ extension ViewController: WeatherManagerDelegate {
         
     }
     func didFailWithError(error: Error) {
+        print (error)
+    }
+    
+}
+
+//MARK: - CLLocation Manager Extension
+
+extension ViewController: CLLocationManagerDelegate {
+    
+    /* Both of these methonds should be,
+    cause method requestLocation must be implement with these methods ⤵️
+    */
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            locationManager.stopUpdatingLocation()
+            let lat = location.coordinate.latitude
+            let lon = location.coordinate.longitude
+            weatherManager.fetchWeather(latitude: lat, longitude: lon) 
+        }
+        
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print (error)
     }
     
